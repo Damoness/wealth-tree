@@ -20,61 +20,60 @@ type Props = {
 export default class WealthTree extends React.Component<Props> {
   @observable hoveredItem: any = null
 
-  lines?: any[]
+  lines: any[]
 
   constructor(props: Props) {
     super(props)
     makeObservable(this)
-  }
 
-  render() {
-    const { data, filter } = this.props
+    const { data, filter } = props
 
-    const lines =
-      this.lines ||
-      orderBy(
-        data.filter(({ decision }) => decision === filter),
-        'sequence.length',
-        'desc'
-      )
-        .slice(0, MAX)
-        .reverse()
-        .map((d) => {
-          // console.log(d.name);
-          const pen = { x: 0, y: 0 }
-          let angleStep = ANGLESTEP
-          let segLength = SEGMENTLENGTH
-          let angle = -0.5 * Math.PI
-          d.points = d.sequence.map((p: string) => {
-            if (p === '0') {
-              //
-            } else if (p === 'K') {
-              angle -= angleStep
-            } else {
-              angle += angleStep
-            }
-            pen.x += Math.cos(angle) * segLength
-            pen.y += Math.sin(angle) * segLength
+    this.lines = orderBy(
+      data.filter(({ decision }) => decision === filter),
+      'sequence.length',
+      'desc'
+    )
+      .slice(0, MAX)
+      .reverse()
+      .map((d) => {
+        // console.log(d.name);
+        const pen = { x: 0, y: 0 }
+        let angleStep = ANGLESTEP
+        let segLength = SEGMENTLENGTH
+        let angle = -0.5 * Math.PI
+        d.points = d.sequence.map((p: string) => {
+          if (p === '0') {
+            //
+          } else if (p === 'K') {
+            angle -= angleStep
+          } else {
+            angle += angleStep
+          }
+          pen.x += Math.cos(angle) * segLength
+          pen.y += Math.sin(angle) * segLength
 
-            angleStep *= ANGLESTEP_DECAY
-            segLength *= SEGMENTLENGTH_DECAY
+          angleStep *= ANGLESTEP_DECAY
+          segLength *= SEGMENTLENGTH_DECAY
 
-            return { x: pen.x, y: pen.y, type: p }
-          })
-
-          d.points.unshift({ x: 0, y: 0 })
-
-          d.lines = pairs(d.points).map(([a, b]: any, i) => (
-            <line key={d.name + i} className={b.type} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
-          ))
-          d.endPoint = { x: pen.x, y: pen.y, angle }
-          return d
+          return { x: pen.x, y: pen.y, type: p }
         })
 
-    this.lines = lines
+        d.points.unshift({ x: 0, y: 0 })
 
+        d.lines = pairs(d.points).map(([a, b]: any, i) => (
+          <line key={d.name + i} className={b.type} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
+        ))
+        d.endPoint = { x: pen.x, y: pen.y, angle }
+        return d
+      })
+  }
+
+  handleContainerClick = () => (this.hoveredItem = null)
+  handleLineMouseOver = (d: any) => () => (this.hoveredItem = d)
+
+  render() {
+    console.log('render-WealthTree')
     let hoverEl
-
     if (this.hoveredItem) {
       const angleDeg = ((this.hoveredItem.endPoint.angle * 180) / Math.PI + 360 * 100) % 360
       const flipped = angleDeg > 90 && angleDeg < 270
@@ -125,7 +124,7 @@ export default class WealthTree extends React.Component<Props> {
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="xMidYMax meet"
-        onClick={() => (this.hoveredItem = null)}
+        onClick={this.handleContainerClick}
       >
         <g transform="translate(50, 82)">
           <text
@@ -163,7 +162,7 @@ export default class WealthTree extends React.Component<Props> {
             }}
           >
             {/* {filter == 'D' ? 'The Deleted' : 'The Kept'} */}
-            '财富之树'
+            财富之树
           </text>
           {/* <text
             dx={0}
@@ -183,8 +182,12 @@ export default class WealthTree extends React.Component<Props> {
               the article.
             </tspan>
           </text> */}
-          {lines.map((d) => (
-            <g onMouseOver={() => (this.hoveredItem = d)} key={d.name}>
+          {this.lines.map((d) => (
+            <g
+              onMouseOver={this.handleLineMouseOver(d)}
+              key={d.name}
+              onTouchStartCapture={this.handleLineMouseOver(d)}
+            >
               {d.lines}
             </g>
           ))}
