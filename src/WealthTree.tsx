@@ -1,30 +1,48 @@
-import React from 'react'
+import React, { ReactElement } from 'react'
 import { pairs } from 'd3'
-import { observable, makeObservable } from 'mobx'
 import { orderBy } from 'lodash'
-import { observer } from 'mobx-react'
-// import { scaleLinear } from 'd3';
 
-const ANGLESTEP = 0.066 * Math.PI
-const ANGLESTEP_DECAY = 1
-const SEGMENTLENGTH = 4
-const SEGMENTLENGTH_DECAY = 0.95
+const ANGLE_STEP = 0.066 * Math.PI
+const ANGLE_STEP_DECAY = 1
+const SEGMENT_LENGTH = 4
+const SEGMENT_LENGTH_DECAY = 0.95
 const MAX = 100
 
 type Props = {
-  data: any[]
+  data: Array<{
+    name: string
+    decision: string
+    sequence: string[]
+  }>
   filter: string
 }
 
-@observer
-export default class WealthTree extends React.Component<Props> {
-  @observable hoveredItem: any = null
+interface Point {
+  x: number
+  y: number
+  type?: string
+}
 
-  lines: any[]
+type LineItem = {
+  name: string
+  points: Array<Point>
+  endPoint: { x: number; y: number; angle: number }
+  lines: ReactElement[]
+}
+
+type State = {
+  hoveredItem: LineItem | null
+}
+
+export default class WealthTree extends React.Component<Props, State> {
+  lines: Array<LineItem>
 
   constructor(props: Props) {
     super(props)
-    makeObservable(this)
+
+    this.state = {
+      hoveredItem: null,
+    }
 
     const { data, filter } = props
 
@@ -36,12 +54,12 @@ export default class WealthTree extends React.Component<Props> {
       .slice(0, MAX)
       .reverse()
       .map((d) => {
-        // console.log(d.name);
         const pen = { x: 0, y: 0 }
-        let angleStep = ANGLESTEP
-        let segLength = SEGMENTLENGTH
+        let angleStep = ANGLE_STEP
+        let segLength = SEGMENT_LENGTH
         let angle = -0.5 * Math.PI
-        d.points = d.sequence.map((p: string) => {
+
+        const points: Point[] = d.sequence.map((p: string) => {
           if (p === '0') {
             //
           } else if (p === 'K') {
@@ -52,44 +70,58 @@ export default class WealthTree extends React.Component<Props> {
           pen.x += Math.cos(angle) * segLength
           pen.y += Math.sin(angle) * segLength
 
-          angleStep *= ANGLESTEP_DECAY
-          segLength *= SEGMENTLENGTH_DECAY
+          angleStep *= ANGLE_STEP_DECAY
+          segLength *= SEGMENT_LENGTH_DECAY
 
           return { x: pen.x, y: pen.y, type: p }
         })
 
-        d.points.unshift({ x: 0, y: 0 })
+        points.unshift({ x: 0, y: 0 })
 
-        d.lines = pairs(d.points).map(([a, b]: any, i) => (
+        const lines = pairs(points).map(([a, b]: any, i) => (
           <line key={d.name + i} className={b.type} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
         ))
-        d.endPoint = { x: pen.x, y: pen.y, angle }
-        return d
+
+        const endPoint = { x: pen.x, y: pen.y, angle }
+
+        return {
+          ...d,
+          points,
+          lines,
+          endPoint,
+        }
       })
   }
 
-  handleContainerClick = () => (this.hoveredItem = null)
-  handleLineMouseOver = (d: any) => () => (this.hoveredItem = d)
+  handleContainerClick = () => this.setState({ hoveredItem: null })
+
+  handleLineMouseOver = (d: LineItem) => () =>
+    this.setState({
+      hoveredItem: d,
+    })
 
   render() {
     console.log('render-WealthTree')
+
+    const { hoveredItem } = this.state
+
     let hoverEl
-    if (this.hoveredItem) {
-      const angleDeg = ((this.hoveredItem.endPoint.angle * 180) / Math.PI + 360 * 100) % 360
+    if (hoveredItem) {
+      const angleDeg = ((hoveredItem.endPoint.angle * 180) / Math.PI + 360 * 100) % 360
       const flipped = angleDeg > 90 && angleDeg < 270
 
       hoverEl = (
         <g className="hover">
           <a
             target="_blank"
-            //xlinkHref={`http://en.wikipedia.org/wiki/Wikipedia:Articles_for_deletion/${this.hoveredItem.name}`}
+            //xlinkHref={`http://en.wikipedia.org/wiki/Wikipedia:Articles_for_deletion/${hoveredItem.name}`}
           >
-            <g className="bg">{this.hoveredItem.lines}</g>
-            <g>{this.hoveredItem.lines}</g>
+            <g className="bg">{hoveredItem.lines}</g>
+            <g>{hoveredItem.lines}</g>
             <g
-              transform={`translate(${this.hoveredItem.endPoint.x}, ${
-                this.hoveredItem.endPoint.y
-              })rotate(${flipped ? angleDeg + 180 : angleDeg})`}
+              transform={`translate(${hoveredItem.endPoint.x}, ${hoveredItem.endPoint.y})rotate(${
+                flipped ? angleDeg + 180 : angleDeg
+              })`}
             >
               <text
                 dx={flipped ? -1 : 1}
@@ -102,7 +134,7 @@ export default class WealthTree extends React.Component<Props> {
                   strokeOpacity: 0.9,
                 }}
               >
-                {this.hoveredItem.name}
+                {hoveredItem.name}
               </text>
               <text
                 dx={flipped ? -1 : 1}
@@ -112,7 +144,7 @@ export default class WealthTree extends React.Component<Props> {
                   fontSize: '2px',
                 }}
               >
-                {this.hoveredItem.name}
+                {hoveredItem.name}
               </text>
             </g>
           </a>
