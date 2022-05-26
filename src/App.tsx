@@ -1,26 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react'
+import './App.css'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import './sass/main.sass'
+
+import { tsv } from 'd3'
+
+import WealthTree from './WealthTree'
+const dataPath = require('./data/data3.tsv')
+
+function parseData({ outcome, decision, name, sequence }: any) {
+  return {
+    outcome,
+    decision,
+    name,
+    sequence: sequence.split(''),
+  }
 }
 
-export default App;
+function App() {
+  const [data, setData] = React.useState([])
+
+  useEffect(() => {
+    tsv(dataPath).then((d: any) => {
+      const r = d.map(parseData)
+      setData(r)
+    })
+  }, [])
+  return data.length > 0 ? <WealthTree data={data} filter="D" /> : null
+}
+
+export default App

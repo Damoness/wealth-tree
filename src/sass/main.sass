@@ -1,0 +1,58 @@
+
+$textCol: #333
+$bgCol: #FFF
+$line-height: 1.4
+$line-height-rem: 1.4rem
+$line-height-em: 1.4em
+
+
+$GREEN: #229b71
+$RED: #982b6f
+$LIGHT_GREEN: #b6ded0
+$LIGHT_RED: #ddb9cf
+
+// body
+// 	font-family: Arial, sans
+// 	font-weight: 300
+// 	background: $bgCol
+// 	color: $textCol
+// 	line-height: $line-height
+// 	margin: 0
+// 	padding: $line-height-rem
+
+.vis-container
+	width: 100%
+	height: 90vh
+	max-height: 100vw
+
+svg
+	display: block
+	width: 100%
+	height: 100%
+
+	line
+		mix-blend-mode: multiply
+		stroke-width: 0.15
+		stroke-linecap: butt
+
+	line.K
+		stroke: $LIGHT_GREEN
+
+	line.D
+		stroke: $LIGHT_RED
+
+	.hover
+		line
+			mix-blend-mode: normal
+			stroke-width: 0.5
+
+		.bg line
+			mix-blend-mode: normal
+			stroke-width: 1.5
+			stroke: #FFF !important
+
+		line.K
+			stroke: $GREEN
+
+		line.D
+			stroke: $RED
