@@ -49,17 +49,17 @@ export default class WealthTree extends React.Component<Props, State> {
     this.lines = orderBy(
       data.filter(({ decision }) => decision === filter),
       'sequence.length',
-      'desc'
+      'asc'
     )
       .slice(0, MAX)
-      .reverse()
+      //.reverse()
       .map((d) => {
         const pen = { x: 0, y: 0 }
         let angleStep = ANGLE_STEP
         let segLength = SEGMENT_LENGTH
         let angle = -0.5 * Math.PI
 
-        const points: Point[] = d.sequence.map((p: string) => {
+        const points: Point[] = d.sequence.map((p) => {
           if (p === '0') {
             //
           } else if (p === 'K') {

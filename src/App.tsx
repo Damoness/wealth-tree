@@ -6,7 +6,7 @@ import './sass/main.sass'
 import { tsv } from 'd3'
 
 import WealthTree from './WealthTree'
-const dataPath = require('./data/data3.tsv')
+const dataPath = require('./data/data4.tsv')
 
 function parseData({ outcome, decision, name, sequence }: any) {
   return {
@@ -26,7 +26,7 @@ function App() {
       setData(r)
     })
   }, [])
-  return data.length > 0 ? <WealthTree data={data} filter="D" /> : null
+  return data.length > 0 ? <WealthTree data={data} filter="K" /> : null
 }
 
 export default App
